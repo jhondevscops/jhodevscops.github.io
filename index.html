@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Tickets de Suporte - O VAREJÃO AUTO PEÇAS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Incluindo Chart.js -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f1f6f9;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #003366;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 2rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        header img {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            height: 50px; /* Ajuste o tamanho conforme necessário */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-container, .login-container, .tickets-container {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            background-color: #003366;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background-color: #002244;
+        }
+
+        #chart-container {
+            margin-top: 20px;
+            width: 100%;
+            height: 400px;
+        }
+
+        .logout-button {
+            background-color: #ff6666;
+            color: white;
+            width: auto;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .logout-button:hover {
+            background-color: #cc3333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+
+        .ticket {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .ticket button {
+            background-color: #ff6666;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .ticket button:hover {
+            background-color: #cc3333;
+        }
+
+        .whatsapp-button {
+            background-color: #25d366;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .whatsapp-button:hover {
+            background-color: #128c7e;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <!-- Logo do Sistema -->
+    <img src="logo-varejao-auto-pecas.png" alt="Logo do Varejão Auto Peças">
+    Sistema de Tickets de Suporte - O VAREJÃO AUTO PEÇAS
+</header>
+
+<div class="container">
+    <!-- Seção de Login -->
+    <div class="login-container" id="login">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="tipoUsuario">Escolha o Tipo de Acesso:</label>
+            <select id="tipoUsuario" onchange="mostrarSenha()">
+                <option value="cliente">Cliente</option>
+                <option value="atendente">Atendente</option>
+            </select>
+        </div>
+        <div class="form-group" id="senhaContainer" style="display: none;">
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha">
+        </div>
+        <button class="button" onclick="entrar()">Entrar</button>
+    </div>
+
+    <!-- Formulário de Criação de Ticket para Cliente -->
+    <div class="form-container" id="usuario" style="display: none;">
+        <h2>Criar Novo Ticket</h2>
+        <div class="form-group">
+            <label for="cliente">Nome do Cliente:</label>
+            <input type="text" id="cliente">
+        </div>
+        <div class="form-group">
+            <label for="descricao">Descrição:</label>
+            <textarea id="descricao" placeholder="Descreva seu problema..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="prioridade">Prioridade:</label>
+            <select id="prioridade">
+                <option value="Baixa">Baixa</option>
+                <option value="Média">Média</option>
+                <option value="Alta">Alta</option>
+            </select>
+        </div>
+        <button class="button" onclick="criarTicket()">Criar Ticket</button>
+        <!-- Link para WhatsApp -->
+        <button class="whatsapp-button" onclick="window.open('https://wa.me/5571992640013?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20um%20atendente!%0A%0AMeu%20nome%3A%20', '_blank')">
+            Fale Conosco no WhatsApp
+        </button>
+    </div>
+
+    <!-- Área de Atendimento para Atendente -->
+    <div class="tickets-container" id="ticketsContainer" style="display: none;">
+        <h2>Tickets de Suporte</h2>
+        <div id="ticketsLista"></div>
+        <button class="button" onclick="limparTickets()">Limpar Tickets</button>
+
+        <!-- Gráfico de Demanda por Prioridade -->
+        <div id="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        <button class="logout-button" onclick="deslogar()">Deslogar</button>
+    </div>
+</div>
+
+<script>
+    let tipoUsuario = localStorage.getItem('tipoUsuario');
+    let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
+    let prioridades = { Baixa: 0, Média: 0, Alta: 0 };
+    let myChart;
+
+    // Função de exibição do gráfico
+    function exibirGrafico() {
+        if (myChart) {
+            myChart.destroy(); // Destrói o gráfico atual para recriar o gráfico
+        }
+        
+        let ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Baixa', 'Média', 'Alta'],
+                datasets: [{
+                    label: 'Tickets por Prioridade',
+                    data: [prioridades.Baixa, prioridades.Média, prioridades.Alta],
+                    backgroundColor: ['#66b3ff', '#ffcc00', '#ff6666'],
+                    borderColor: ['#4d94ff', '#ff9900', '#ff3333'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Mostrar o campo de senha para atendente
+    function mostrarSenha() {
+        const tipo = document.getElementById('tipoUsuario').value;
+        if (tipo === 'atendente') {
+            document.getElementById('senhaContainer').style.display = 'block';
+        } else {
+            document.getElementById('senhaContainer').style.display = 'none';
+        }
+    }
+
+    // Função de login
+    function entrar() {
+        const usuario = document.getElementById('tipoUsuario').value;
+        localStorage.setItem('tipoUsuario', usuario);
+        if (usuario === 'cliente') {
+            document.getElementById('usuario').style.display = 'block';
+            document.getElementById('login').style.display = 'none';
+        } else if (usuario === 'atendente') {
+            document.getElementById('ticketsContainer').style.display = 'block';
+            document.getElementById('login').style.display = 'none';
+            exibirTickets();
+            exibirGrafico();
+        }
+    }
+
+    // Função de criação de ticket
+    function criarTicket() {
+        const nome = document.getElementById('cliente').value;
+        const descricao = document.getElementById('descricao').value;
+        const prioridade = document.getElementById('prioridade').value;
+
+        if (nome && descricao) {
+            const ticket = {
+                cliente: nome,
+                descricao: descricao,
+                prioridade: prioridade,
+                status: "Aberto",
+                mensagens: []
+            };
+
+            tickets.push(ticket);
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+
+            // Atualizar as prioridades
+            prioridades[prioridade]++;
+            exibirGrafico();  // Atualiza o gráfico imediatamente
+
+            alert('Ticket criado com sucesso!');
+            document.getElementById('cliente').value = '';
+            document.getElementById('descricao').value = '';
+        } else {
+            alert('Por favor, preencha todos os campos.');
+        }
+    }
+
+    // Exibir lista de tickets
+    function exibirTickets() {
+        const ticketsLista = document.getElementById('ticketsLista');
+        ticketsLista.innerHTML = '';
+        tickets.forEach((ticket, index) => {
+            const div = document.createElement('div');
+            div.classList.add('ticket');
+            div.innerHTML = 
+                `<strong>Cliente:</strong> ${ticket.cliente}<br>
+                <strong>Descrição:</strong> ${ticket.descricao}<br>
+                <strong>Prioridade:</strong> ${ticket.prioridade}<br>
+                <strong>Status:</strong> ${ticket.status}
+                <button onclick="excluirTicket(${index})">Excluir</button>`;
+            ticketsLista.appendChild(div);
+        });
+    }
+
+    // Função para excluir ticket
+    function excluirTicket(index) {
+        const ticket = tickets[index];
+        // Atualizar contagem de prioridades antes de excluir
+        prioridades[ticket.prioridade]--;
+        tickets.splice(index, 1);
+        localStorage.setItem('tickets', JSON.stringify(tickets));
+        exibirTickets();
+        exibirGrafico();
+    }
+
+    // Função para limpar todos os tickets
+    function limparTickets() {
+        if (confirm('Tem certeza que deseja limpar todos os tickets?')) {
+            localStorage.removeItem('tickets');
+            tickets = [];
+            prioridades = { Baixa: 0, Média: 0, Alta: 0 };
+            exibirGrafico();
+            exibirTickets();
+        }
+    }
+
+    // Função de deslogar
+    function deslogar() {
+        localStorage.removeItem('tipoUsuario');
+        localStorage.removeItem('tickets');
+        window.location.reload(); // Recarrega a página para exibir a tela de login novamente
+    }
+</script>
+
+</body>
+</html>
